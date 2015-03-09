@@ -5,6 +5,8 @@ import (
   "fmt"
   "flag"
   "net/http"
+
+  "github.com/r4start/web-tracer/log"
 )
 
 func getServeAddress() (string, string) {
@@ -23,6 +25,8 @@ func main() {
   host, port := getServeAddress()
 
   http.HandleFunc("/", hello)
+  http.HandleFunc("/log-write", log.AddToLog)
+
   bind := fmt.Sprintf("%s:%s", host, port)
   
   fmt.Printf("listening on %s...", bind)
