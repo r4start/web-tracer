@@ -25,7 +25,9 @@ func main() {
   host, port := getServeAddress()
 
   http.HandleFunc("/", hello)
-  http.HandleFunc("/log-write", log.AddToLog)
+
+  writeHandler := log.DbLogHandler{}
+  http.Handle("/log-write", writeHandler)
 
   bind := fmt.Sprintf("%s:%s", host, port)
   
