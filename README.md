@@ -1,2 +1,2 @@
-# web-tracer
+# Web Tracer
 Simple web logger service.
