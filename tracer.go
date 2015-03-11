@@ -1,7 +1,6 @@
 package main
 
 import (
-  _ "os"
   "fmt"
   "log"
   "flag"
@@ -58,7 +57,6 @@ func mainPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func notFoundPage(res http.ResponseWriter, req *http.Request) {
-  header := res.Header()
-  header.Add("Location", "http://localhost")
+  res.Header().Add("Location", "http://" + req.Host)
   res.WriteHeader(302)
 }
