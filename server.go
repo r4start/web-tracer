@@ -9,7 +9,7 @@ import (
 
   "github.com/gorilla/mux"
 
-  "github.com/r4start/web-tracer/tracerdb"
+  "github.com/r4start/web-tracer/tracer"
 )
 
 type ServerParameters struct {
@@ -63,7 +63,7 @@ func main() {
     router.HandleFunc("/", mainPage)
     router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
-    writeHandler, err := tracerdb.CreateDbLogHandler(params.DbName)
+    writeHandler, err := tracer.CreateDbLogger(params.DbName)
     if err != nil {
       log.Fatal(err)
     } else {

@@ -1,4 +1,4 @@
-package tracerdb
+package tracer
 
 import (
   "fmt"
@@ -7,12 +7,12 @@ import (
   "code.google.com/p/go-sqlite/go1/sqlite3"
 )
 
-type DbLogHandler struct {
+type DbLogger struct {
   connection *sqlite3.Conn
 }
 
-func CreateDbLogHandler(db_name string) (DbLogHandler, error) {
-  handler := DbLogHandler{nil}
+func CreateDbLogger(db_name string) (DbLogger, error) {
+  handler := DbLogger{nil}
 
   conn, err := sqlite3.Open(db_name)
   if err == nil {
@@ -22,7 +22,7 @@ func CreateDbLogHandler(db_name string) (DbLogHandler, error) {
   return handler, err
 }
 
-func (handler DbLogHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (handler DbLogger) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   if req.Method != "POST" {
     fmt.Fprintf(res, "404")
   } else {
@@ -30,6 +30,6 @@ func (handler DbLogHandler) ServeHTTP(res http.ResponseWriter, req *http.Request
   }
 }
 
-func (handler DbLogHandler) AddNewEntry(res http.ResponseWriter, req *http.Request) {
+func (handler DbLogger) AddNewEntry(res http.ResponseWriter, req *http.Request) {
   fmt.Fprintf(res, "POST")
 }
