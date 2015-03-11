@@ -1,6 +1,7 @@
 package main
 
 import (
+  "os"
   "fmt"
   "log"
   "flag"
@@ -31,33 +32,6 @@ func getServeAddress() ServerParameters {
   return params
 }
 
-func main() {
-  params := getServeAddress()
-
-  router := mux.NewRouter()
-  router.HandleFunc("/", mainPage)
-  router.NotFoundHandler = http.HandlerFunc(notFoundPage)
-
-  writeHandler, err := tracerdb.CreateDbLogHandler(params.DbName)
-  if err != nil {
-    log.Fatal(err)
-  } else {
-    router.Handle("/terminal/{id:[0-9]+}", writeHandler)
-  }
-
-  http.Handle("/", router)
-
-  bind := fmt.Sprintf("%s:%s", params.Host, params.Port)
-  
-  fmt.Printf("Listening on %s. Use database %s", bind, params.DbName)
-  
-  err = http.ListenAndServe(bind, nil)
-  
-  if err != nil {
-    panic(err)
-  }
-}
-
 func mainPage(res http.ResponseWriter, req *http.Request) {
   fmt.Fprintf(res, "Web tracer main page.")
 }
@@ -65,4 +39,45 @@ func mainPage(res http.ResponseWriter, req *http.Request) {
 func notFoundPage(res http.ResponseWriter, req *http.Request) {
   res.Header().Add("Location", "http://" + req.Host)
   res.WriteHeader(302)
+}
+
+func siteUnderReconstructionPage(res http.ResponseWriter, req *http.Request) {
+  fmt.Fprintf(res, "Stub")
+}
+
+func isSiteRootExists(path string) bool {
+  _, err := os.Stat(path)
+  if err == nil { return true }
+  return false
+}
+
+func main() {
+  params := getServeAddress()
+
+  if isSiteRootExists(params.SiteRoot) {
+    router := mux.NewRouter()
+    router.HandleFunc("/", mainPage)
+    router.NotFoundHandler = http.HandlerFunc(notFoundPage)
+
+    writeHandler, err := tracerdb.CreateDbLogHandler(params.DbName)
+    if err != nil {
+      log.Fatal(err)
+    } else {
+      router.Handle("/terminal/{id:[0-9]+}", writeHandler)
+    }
+
+    http.Handle("/", router)
+  } else {
+    http.HandleFunc("/", siteUnderReconstructionPage)
+  }
+
+  bind := fmt.Sprintf("%s:%s", params.Host, params.Port)
+  
+  fmt.Printf("Listening on %s. Use database %s", bind, params.DbName)
+  
+  err := http.ListenAndServe(bind, nil)
+  
+  if err != nil {
+    panic(err)
+  }
 }
