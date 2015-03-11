@@ -41,8 +41,12 @@ func notFoundPage(res http.ResponseWriter, req *http.Request) {
   res.WriteHeader(302)
 }
 
+// if app can`t find a site root, then it will show this stub html.
 func siteUnderReconstructionPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Fprintf(res, "Stub")
+  fmt.Fprintf(res, "<!DOCTYPE html><html><head><title>Under" +
+                   " construction</title></head><body>" +
+                   "The site is under construction.<br>Please visit" +
+                   " us later.</body></html>")
 }
 
 func isSiteRootExists(path string) bool {
