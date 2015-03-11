@@ -7,6 +7,8 @@ import (
   "flag"
   "net/http"
 
+  "github.com/gorilla/mux"
+
   "github.com/r4start/web-tracer/tracerdb"
 )
 
@@ -27,14 +29,18 @@ func getServeAddress() (string, string, string) {
 func main() {
   host, port, db_name := getServeAddress()
 
-  http.HandleFunc("/", hello)
+  router := mux.NewRouter()
+  router.HandleFunc("/", mainPage)
+  router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
   writeHandler, err := tracerdb.CreateDbLogHandler(db_name)
   if err != nil {
     log.Fatal(err)
   } else {
-    http.Handle("/log", writeHandler)
+    router.Handle("/terminal/{id:[0-9]+}", writeHandler)
   }
+
+  http.Handle("/", router)
 
   bind := fmt.Sprintf("%s:%s", host, port)
   
@@ -47,6 +53,12 @@ func main() {
   }
 }
 
-func hello(res http.ResponseWriter, req *http.Request) {
-  fmt.Fprintf(res, "Database status is")
+func mainPage(res http.ResponseWriter, req *http.Request) {
+  fmt.Fprintf(res, "Web tracer main page.")
+}
+
+func notFoundPage(res http.ResponseWriter, req *http.Request) {
+  header := res.Header()
+  header.Add("Location", "http://localhost")
+  res.WriteHeader(302)
 }

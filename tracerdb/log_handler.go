@@ -23,9 +23,13 @@ func CreateDbLogHandler(db_name string) (DbLogHandler, error) {
 }
 
 func (handler DbLogHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-  fmt.Fprintf(res, "Log record was added with new handler %p!", &handler)
+  if req.Method != "POST" {
+    fmt.Fprintf(res, "404")
+  } else {
+    handler.AddNewEntry(res, req)
+  }
 }
 
 func (handler DbLogHandler) AddNewEntry(res http.ResponseWriter, req *http.Request) {
-  
+  fmt.Fprintf(res, "POST")
 }
