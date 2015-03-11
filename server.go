@@ -10,6 +10,7 @@ import (
   "github.com/gorilla/mux"
 
   "github.com/r4start/web-tracer/tracer"
+  "github.com/r4start/web-tracer/sitecache"
 )
 
 type ServerParameters struct {
@@ -58,18 +59,29 @@ func main() {
     router := mux.NewRouter()
     router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
-    writeHandler, err := tracer.CreateDbLogger(params.DbName)
-    if err != nil {
-      log.Fatal(err)
-    } else {
-      router.Handle("/terminal/{id:[0-9]+}", writeHandler)
+    {
+      _, err := sitecache.NewSiteCache(params.SiteRoot)
+      if err != nil {
+        log.Fatal(err)
+      }
     }
 
-    app, e := tracer.CreateApp(params.DbName)
-    if e != nil {
-      log.Fatal(e)
-    } else {
-      router.Handle("/", app)
+    {
+      writeHandler, err := tracer.NewDbLogger(params.DbName)
+      if err != nil {
+        log.Fatal(err)
+      } else {
+        router.Handle("/terminal/{id:[0-9]+}", writeHandler)
+      }
+    }
+
+    {
+      app, err := tracer.NewApp(params.DbName)
+      if err != nil {
+        log.Fatal(err)
+      } else {
+        router.Handle("/", app)
+      }
     }
 
     http.Handle("/", router)

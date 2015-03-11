@@ -5,6 +5,8 @@ import (
   "net/http"
 
   "code.google.com/p/go-sqlite/go1/sqlite3"
+
+  "github.com/r4start/web-tracer/sitecache"
 )
 
 const (
@@ -16,10 +18,11 @@ const (
 
 type App struct {
   connection *sqlite3.Conn
+  cache *sitecache.SiteCache
 }
 
-func CreateApp(dbName string) (App, error) {
-  newApp := App{nil}
+func NewApp(dbName string) (App, error) {
+  newApp := App{nil, nil}
 
   conn, err := sqlite3.Open(dbName)
   if err == nil {
