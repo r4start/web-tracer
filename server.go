@@ -32,10 +32,6 @@ func getServeAddress() ServerParameters {
   return params
 }
 
-func mainPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Fprintf(res, "Web tracer main page.")
-}
-
 func notFoundPage(res http.ResponseWriter, req *http.Request) {
   res.Header().Add("Location", "http://" + req.Host)
   res.WriteHeader(302)
@@ -60,7 +56,6 @@ func main() {
 
   if isSiteRootExists(params.SiteRoot) {
     router := mux.NewRouter()
-    router.HandleFunc("/", mainPage)
     router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
     writeHandler, err := tracer.CreateDbLogger(params.DbName)
@@ -68,6 +63,13 @@ func main() {
       log.Fatal(err)
     } else {
       router.Handle("/terminal/{id:[0-9]+}", writeHandler)
+    }
+
+    app, e := tracer.CreateApp(params.DbName)
+    if e != nil {
+      log.Fatal(e)
+    } else {
+      router.Handle("/", app)
     }
 
     http.Handle("/", router)
