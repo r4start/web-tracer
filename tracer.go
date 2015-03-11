@@ -11,28 +11,34 @@ import (
   "github.com/r4start/web-tracer/tracerdb"
 )
 
-func getServeAddress() (string, string, string) {
-  var host string
-  var port string
-  var db_name string
+type ServerParameters struct {
+  Host string
+  Port string
+  DbName string
+  SiteRoot string
+}
 
-  flag.StringVar(&host, "host", "localhost", "IP address for listening")
-  flag.StringVar(&port, "port", "4000", "Port number")
-  flag.StringVar(&db_name, "dbname", "tracer.db", "Database name or path")
+func getServeAddress() ServerParameters {
+  var params ServerParameters
+
+  flag.StringVar(&params.Host, "host", "localhost", "IP address for listening")
+  flag.StringVar(&params.Port, "port", "4000", "Port number")
+  flag.StringVar(&params.DbName, "dbname", "tracer.db", "Database name or path")
+  flag.StringVar(&params.SiteRoot, "site-root", "www/", "Path to site root folder")
 
   flag.Parse()
 
-  return host, port, db_name
+  return params
 }
 
 func main() {
-  host, port, db_name := getServeAddress()
+  params := getServeAddress()
 
   router := mux.NewRouter()
   router.HandleFunc("/", mainPage)
   router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
-  writeHandler, err := tracerdb.CreateDbLogHandler(db_name)
+  writeHandler, err := tracerdb.CreateDbLogHandler(params.DbName)
   if err != nil {
     log.Fatal(err)
   } else {
@@ -41,9 +47,9 @@ func main() {
 
   http.Handle("/", router)
 
-  bind := fmt.Sprintf("%s:%s", host, port)
+  bind := fmt.Sprintf("%s:%s", params.Host, params.Port)
   
-  fmt.Printf("Listening on %s. Use database %s", bind, db_name)
+  fmt.Printf("Listening on %s. Use database %s", bind, params.DbName)
   
   err = http.ListenAndServe(bind, nil)
   
