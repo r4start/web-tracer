@@ -1,6 +1,6 @@
 package tracer
 
-import "github.com/jinzhu/gorm"
+import _ "github.com/jinzhu/gorm"
 
 type LogEntry struct {
   Id uint64

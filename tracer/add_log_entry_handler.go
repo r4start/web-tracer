@@ -17,6 +17,12 @@ func NewDbLogger(dbName string) (DbLogger, error) {
   return DbLogger{&conn}, err
 }
 
+func (handler DbLogger) PrepareDB() {
+  if !handler.connection.HasTable(&LogEntry{}) {
+    handler.connection = handler.connection.CreateTable(&LogEntry{})
+  }
+}
+
 func (handler DbLogger) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   if req.Method != "POST" {
     fmt.Fprintf(res, "404")

@@ -57,6 +57,8 @@ func main() {
       } else {
         router.Handle("/terminal/{id:[0-9]+}", writeHandler)
       }
+
+      writeHandler.PrepareDB()
     }
 
     {
