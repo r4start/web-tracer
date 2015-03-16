@@ -33,8 +33,8 @@ func getServeAddress() ServerParameters {
 }
 
 func notFoundPage(res http.ResponseWriter, req *http.Request) {
-  res.Header().Add("Location", "http://" + req.Host)
-  res.WriteHeader(302)
+  res.Header().Add("Location", "http://" + req.Host + "/404.html")
+  res.WriteHeader(404)
 }
 
 // if app can`t find a site root, then it will show this stub html.
@@ -57,13 +57,6 @@ func main() {
   if isSiteRootExists(params.SiteRoot) {
     router := mux.NewRouter()
     router.NotFoundHandler = http.HandlerFunc(notFoundPage)
-
-    {
-      _, err := sitecache.NewSiteCache(params.SiteRoot)
-      if err != nil {
-        log.Fatal(err)
-      }
-    }
 
     {
       writeHandler, err := tracer.NewDbLogger(params.DbName)
