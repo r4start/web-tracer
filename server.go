@@ -10,7 +10,6 @@ import (
   "github.com/gorilla/mux"
 
   "github.com/r4start/web-tracer/tracer"
-  "github.com/r4start/web-tracer/sitecache"
 )
 
 type ServerParameters struct {
@@ -75,14 +74,7 @@ func main() {
       }
     }
 
-    {
-      app, err := tracer.NewApp(params.DbName)
-      if err != nil {
-        log.Fatal(err)
-      } else {
-        router.Handle("/", app)
-      }
-    }
+    router.PathPrefix("/").Handler(http.FileServer(http.Dir(params.SiteRoot)))
 
     http.Handle("/", router)
   } else {
