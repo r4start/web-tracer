@@ -8,6 +8,7 @@ import (
   "strings"
   "io/ioutil"
   "hash/fnv"
+  "strconv"
 )
 
 type CacheItem struct {
@@ -104,4 +105,26 @@ func (cache *SiteCache) GetItem(key string) (CacheItem, error) {
 
 func (cache *SiteCache) GetView() map[string]CacheItem {
   return cache.cachedItems
+}
+
+func (cache *SiteCache) MarshalJSON() ([]byte, error) {
+  items := cache.GetView()
+
+  array := `{ "cache" : [`
+  for k, v := range items {
+    array := `{"name" : "` + k + `",`
+    array += `"hash" : "` + strconv.FormatUint(v.CheckSum, 16) + `",`
+    array += `"size" : "` + strconv.FormatInt(int64(len(v.Data)), 10) + `"},`
+  }
+
+  if len(items) != 0 {
+    array = array[: len(array) - 1]  
+  }
+  
+  array += `]}`
+  return []byte(array), nil
+}
+
+func (cache *SiteCache) UnmarshalJSON([]byte) error {
+  return nil
 }
