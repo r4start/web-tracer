@@ -35,9 +35,11 @@ func NewApp(dbName string) (App, error) {
 func (handler App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   if req.Method == "POST" {
     fmt.Fprintf(res, "503")
+    res.WriteHeader(503)
   } else if req.Method == "GET" {
     fmt.Fprintf(res, mainPageStub)
   } else {
     fmt.Fprintf(res, "503")
+    res.WriteHeader(503)
   }
 }

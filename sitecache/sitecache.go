@@ -2,8 +2,9 @@ package sitecache
 
 import (
   _ "io"
-  _ "os"
+  "os"
   "log"
+  "errors"
   "strings"
   "io/ioutil"
   "hash/fnv"
@@ -15,7 +16,9 @@ type CacheItem struct {
 }
 
 type SiteCache struct {
-  CachedItems map[string]CacheItem
+  cachedItems map[string]CacheItem
+
+  SiteRoot string
 }
 
 func NewCacheItem(data []byte) CacheItem {
@@ -59,7 +62,7 @@ func (cache *SiteCache) loadCache(siteRoot string) error {
     }
 
     item := NewCacheItem(data)
-    cache.CachedItems[rootName + file.Name()] = item
+    cache.cachedItems[rootName + file.Name()] = item
     log.Println("Added file ", rootName + file.Name(), "to cache")
   }
 
@@ -68,12 +71,37 @@ func (cache *SiteCache) loadCache(siteRoot string) error {
 
 func NewSiteCache(siteRoot string) (*SiteCache, error) {
   cache := new(SiteCache)
-  cache.CachedItems = make(map[string]CacheItem)
+  cache.cachedItems = make(map[string]CacheItem)
 
-  err := cache.loadCache(siteRoot)
+  cwd, err := os.Getwd()
+  if err != nil {
+    return nil, err
+  }
+
+  err = os.Chdir(siteRoot)
+  if err != nil {
+    return nil, err
+  }
+
+  cache.SiteRoot = siteRoot
+  err = cache.loadCache("./")
   if err != nil {
     cache = nil
   }
 
+  err = os.Chdir(cwd)
   return cache, err
+}
+
+func (cache *SiteCache) GetItem(key string) (CacheItem, error) {
+  val, exists := cache.cachedItems[key]
+  if !exists {
+    return CacheItem{}, errors.New("No item with specified key.")
+  } else {
+    return val, nil
+  }
+}
+
+func (cache *SiteCache) GetView() map[string]CacheItem {
+  return cache.cachedItems
 }
