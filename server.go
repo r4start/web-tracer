@@ -37,14 +37,6 @@ func notFoundPage(res http.ResponseWriter, req *http.Request) {
   res.WriteHeader(404)
 }
 
-// if app can`t find a site root, then it will show this stub html.
-func siteUnderReconstructionPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Fprintf(res, "<!DOCTYPE html><html><head><title>Under" +
-                   " construction</title></head><body>" +
-                   "The site is under construction.<br>Please visit" +
-                   " us later.</body></html>")
-}
-
 func isSiteRootExists(path string) bool {
   _, err := os.Stat(path)
   if err == nil { return true }
@@ -67,11 +59,20 @@ func main() {
       }
     }
 
+    {
+      idsLister, err := tracer.NewIdLister(params.DbName)
+      if err != nil {
+        log.Fatal(err)
+      } else {
+        router.Handle("/ids", idsLister)
+      }
+    }
+
     router.PathPrefix("/").Handler(http.FileServer(http.Dir(params.SiteRoot)))
 
     http.Handle("/", router)
   } else {
-    http.HandleFunc("/", siteUnderReconstructionPage)
+    log.Fatal("Please specify site root.")
   }
 
   bind := fmt.Sprintf("%s:%s", params.Host, params.Port)

@@ -4,22 +4,17 @@ import (
   "fmt"
   "net/http"
 
-  "code.google.com/p/go-sqlite/go1/sqlite3"
+  "github.com/jinzhu/gorm"
+  _ "github.com/mattn/go-sqlite3"
 )
 
 type DbLogger struct {
-  connection *sqlite3.Conn
+  connection *gorm.DB
 }
 
 func NewDbLogger(dbName string) (DbLogger, error) {
-  handler := DbLogger{nil}
-
-  conn, err := sqlite3.Open(dbName)
-  if err == nil {
-    handler.connection = conn
-  }
-  
-  return handler, err
+  conn, err := gorm.Open("sqlite3", dbName)
+  return DbLogger{&conn}, err
 }
 
 func (handler DbLogger) ServeHTTP(res http.ResponseWriter, req *http.Request) {
