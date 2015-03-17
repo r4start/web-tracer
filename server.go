@@ -54,6 +54,7 @@ func main() {
 
     {
       idsCache = tracer.NewTerminalIdsCache()
+      idsCache.AppendIds(tracer.LoadIdsFromDb(params.DbName))
     }
 
     {

@@ -1,10 +1,13 @@
 package tracer
 
 import (
+  "log"
   "sync"
   "sort"
 
   "github.com/cznic/sortutil"
+  "github.com/jinzhu/gorm"
+  _ "github.com/mattn/go-sqlite3"
 )
 
 type TerminalIdsCache struct {
@@ -19,8 +22,37 @@ func NewTerminalIdsCache() TerminalIdsCache {
   return newCache
 }
 
+func LoadIdsFromDb(dbName string) []uint64 {
+  conn, err := gorm.Open("sqlite3", dbName)
+  if err != nil {
+    return make([]uint64, 0)
+  }
+
+  ids := make([]uint64, 0)
+  rows, e := conn.Raw("select distinct terminal_id from log_entries;").
+                  Rows()
+  
+  if e != nil {
+    log.Println(e)
+    return make([]uint64, 0)
+  }
+
+  defer rows.Close()
+  for rows.Next() {
+    var termId uint64
+    
+    err = rows.Scan(&termId)
+    if err == nil {
+      ids = append(ids, termId)
+    }
+  }
+
+  return ids
+}
+
 func (cache *TerminalIdsCache) AppendIds(ids []uint64) {
   cache.guard.Lock()
+  defer cache.guard.Unlock()
 
   inserted := false
   outOfRange := len(cache.ids)
@@ -37,31 +69,27 @@ func (cache *TerminalIdsCache) AppendIds(ids []uint64) {
   if inserted {
     sort.Sort(Uint64Slice(cache.ids))
   }
-
-  cache.guard.Unlock()
 }
 
 func (cache *TerminalIdsCache) AppendId(id uint64) {
   cache.guard.Lock()
+  defer cache.guard.Unlock()
 
   outOfRange := len(cache.ids)
   pos := sortutil.SearchUint64s(cache.ids, id)
   if pos != outOfRange {
-    cache.guard.Unlock()
     return    
   }
 
   cache.ids = append(cache.ids, id)
 
   sort.Sort(Uint64Slice(cache.ids))
-
-  cache.guard.Unlock()
 }
 
 func (cache *TerminalIdsCache) GetIds() []uint64 {
   cache.guard.RLock()
+  defer cache.guard.RUnlock()
   ids := cache.ids
-  cache.guard.RUnlock()
 
   return ids
 }

@@ -28,12 +28,20 @@ func (handler IdLister) ServeHTTP(res http.ResponseWriter, req *http.Request) {
     return
   }
 
-  encoder := json.NewEncoder(res)
-
   type idsType struct {
     Ids []uint64 `json:"ids"`
   }
 
-  var ids = idsType{handler.IdsCache.GetIds()}
+  var ids idsType
+  signal := make(chan bool)
+
+  go func() {
+    ids.Ids = handler.IdsCache.GetIds()
+    signal <- true
+  }()
+
+  encoder := json.NewEncoder(res)
+
+  _ = <- signal
   _ = encoder.Encode(ids)
 }
