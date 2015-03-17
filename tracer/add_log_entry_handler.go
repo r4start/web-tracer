@@ -26,8 +26,8 @@ func (logger DbLogger) storeEntry(termianlId uint64, msg string) {
                     Timestamp : time.Now().String(),
                     Message : encodedMsg}
 
-  logger.connection.Create(&entry)
-  go log.Printf("Adding entry for %d, content: %s\n", termianlId, encodedMsg)
+  go logger.connection.Create(&entry)
+  log.Printf("Adding entry for %d, content: %s\n", termianlId, encodedMsg)
 }
 
 func NewDbLogger(dbName string) (DbLogger, error) {
