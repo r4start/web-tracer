@@ -19,22 +19,6 @@ func NewTerminalIdsCache() TerminalIdsCache {
   return newCache
 }
 
-type Uint64Slice []uint64
-
-func (s Uint64Slice) Len() int {
-  return len(s)
-}
-
-func (s Uint64Slice) Less(i, j int) bool {
-  return s[i] < s[j]
-}
-
-func (s Uint64Slice) Swap(i, j int) {
-  s[i] = s[i] ^ s[j]
-  s[j] = s[i] ^ s[j]
-  s[i] = s[j] ^ s[i]
-}
-
 func (cache *TerminalIdsCache) AppendIds(ids []uint64) {
   cache.guard.Lock()
 
@@ -80,4 +64,20 @@ func (cache *TerminalIdsCache) GetIds() []uint64 {
   cache.guard.RUnlock()
 
   return ids
+}
+
+type Uint64Slice []uint64
+
+func (s Uint64Slice) Len() int {
+  return len(s)
+}
+
+func (s Uint64Slice) Less(i, j int) bool {
+  return s[i] < s[j]
+}
+
+func (s Uint64Slice) Swap(i, j int) {
+  s[i] = s[i] ^ s[j]
+  s[j] = s[i] ^ s[j]
+  s[i] = s[j] ^ s[i]
 }

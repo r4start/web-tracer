@@ -50,6 +50,12 @@ func main() {
     router := mux.NewRouter()
     router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
+    var idsCache tracer.TerminalIdsCache
+
+    {
+      idsCache = tracer.NewTerminalIdsCache()
+    }
+
     {
       writeHandler, err := tracer.NewDbLogger(params.DbName)
       if err != nil {
@@ -66,6 +72,7 @@ func main() {
       if err != nil {
         log.Fatal(err)
       } else {
+        idsLister.IdsCache = &idsCache
         router.Handle("/ids", idsLister)
       }
     }
