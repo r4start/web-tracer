@@ -79,7 +79,7 @@ func main() {
 
   bind := fmt.Sprintf("%s:%s", params.Host, params.Port)
   
-  fmt.Printf("Listening on %s. Use database %s", bind, params.DbName)
+  fmt.Printf("Listening on %s. Use database %s\n", bind, params.DbName)
   
   err := http.ListenAndServe(bind, nil)
   
