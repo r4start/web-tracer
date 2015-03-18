@@ -42,6 +42,6 @@ func (handler IdLister) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
   encoder := json.NewEncoder(res)
 
-  _ = <- signal
-  _ = encoder.Encode(ids)
+  <- signal
+  encoder.Encode(ids)
 }
