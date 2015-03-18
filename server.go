@@ -23,7 +23,7 @@ func getServeAddress() ServerParameters {
   var params ServerParameters
 
   flag.StringVar(&params.Host, "host", "localhost", "IP address for listening")
-  flag.StringVar(&params.Port, "port", "4000", "Port number")
+  flag.StringVar(&params.Port, "port", "80", "Port number")
   flag.StringVar(&params.DbName, "dbname", "tracer.db", "Database name or path")
   flag.StringVar(&params.SiteRoot, "site-root", "www/", "Path to site root folder")
 
@@ -79,7 +79,7 @@ func main() {
     }
 
     router.PathPrefix("/").Handler(http.FileServer(http.Dir(params.SiteRoot)))
-
+    
     http.Handle("/", router)
   } else {
     log.Fatal("Please specify site root.")
