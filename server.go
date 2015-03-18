@@ -55,6 +55,8 @@ func main() {
     {
       idsCache = tracer.NewTerminalIdsCache()
       idsCache.AppendIds(tracer.LoadIdsFromDb(params.DbName))
+
+      log.Println("Got ids ", idsCache.GetIds())
     }
 
     {
@@ -62,6 +64,7 @@ func main() {
       if err != nil {
         log.Fatal(err)
       } else {
+        writeHandler.IdsCache = &idsCache
         router.Handle("/terminal/{id:[0-9]+}", writeHandler)
       }
 
@@ -79,7 +82,7 @@ func main() {
     }
 
     router.PathPrefix("/").Handler(http.FileServer(http.Dir(params.SiteRoot)))
-    
+
     http.Handle("/", router)
   } else {
     log.Fatal("Please specify site root.")

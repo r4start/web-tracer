@@ -18,6 +18,7 @@ type TerminalIdsCache struct {
 func NewTerminalIdsCache() TerminalIdsCache {
   newCache := TerminalIdsCache{}
   newCache.ids = make([]uint64, 0)
+  newCache.guard = sync.RWMutex{}
 
   return newCache
 }
@@ -54,21 +55,9 @@ func (cache *TerminalIdsCache) AppendIds(ids []uint64) {
   cache.guard.Lock()
   defer cache.guard.Unlock()
 
-  inserted := false
-  outOfRange := len(cache.ids)
-  for _, v := range ids {
-    pos := sortutil.SearchUint64s(cache.ids, v)
-    if pos != outOfRange {
-      continue
-    }
-
-    cache.ids = append(cache.ids, v)
-    inserted = true
-  }
-
-  if inserted {
-    sort.Sort(Uint64Slice(cache.ids))
-  }
+  cache.ids = append(cache.ids, ids...)
+  sort.Sort(Uint64Slice(cache.ids))
+  cache.ids = cache.ids[:sortutil.Dedupe(Uint64Slice(cache.ids))]
 }
 
 func (cache *TerminalIdsCache) AppendId(id uint64) {
@@ -84,6 +73,7 @@ func (cache *TerminalIdsCache) AppendId(id uint64) {
   cache.ids = append(cache.ids, id)
 
   sort.Sort(Uint64Slice(cache.ids))
+  cache.ids = cache.ids[:sortutil.Dedupe(Uint64Slice(cache.ids))]
 }
 
 func (cache *TerminalIdsCache) GetIds() []uint64 {

@@ -17,6 +17,8 @@ import (
 
 type DbLogger struct {
   connection *gorm.DB
+
+  IdsCache *TerminalIdsCache
 }
 
 func (logger DbLogger) storeEntry(termianlId uint64, msg string) {
@@ -27,12 +29,12 @@ func (logger DbLogger) storeEntry(termianlId uint64, msg string) {
                     Message : encodedMsg}
 
   go logger.connection.Create(&entry)
-  log.Printf("Adding entry for %d, content: %s\n", termianlId, encodedMsg)
+  go logger.IdsCache.AppendId(termianlId)
 }
 
 func NewDbLogger(dbName string) (DbLogger, error) {
   conn, err := gorm.Open("sqlite3", dbName)
-  return DbLogger{&conn}, err
+  return DbLogger{&conn, nil}, err
 }
 
 func (handler DbLogger) PrepareDB() {
