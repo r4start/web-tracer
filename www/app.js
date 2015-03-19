@@ -30,7 +30,7 @@ var get_ids = function(event) {
 var on_loaded = function() {
   $('#start_trace_btn').on('click', start_trace);
   $('#debug_id').keyup(submit_debug_id_by_enter);
-  $('#service_id').keyup(get_ids);
+  $('#service_addr').keyup(get_ids);
 };
 
 $(document).ready(on_loaded);
