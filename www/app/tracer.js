@@ -13,7 +13,10 @@ var tracer = function() {
     }
 
     var response_obj = JSON.parse(this.responseText);
-    console.log(response_obj.entries);
+
+    response_obj.entries.forEach(function(e) {
+      console.log(e.timestamp + " " + atob(e.message));
+    });
   };
 
   request.open("GET", "http://" + $('#service_addr').val() + "/terminal/" + String(id), true);
