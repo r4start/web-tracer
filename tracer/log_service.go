@@ -44,10 +44,13 @@ func (handler DbLogger) PrepareDB() {
 }
 
 func (handler DbLogger) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-  if req.Method != "POST" {
-    fmt.Fprintf(res, "404")
-  } else {
+  if req.Method == "GET" {
+    handler.GetLogs(res, req)
+  } else if req.Method == "POST" {
     handler.AddNewEntry(res, req)
+  } else {
+    fmt.Fprintf(res, "404")
+    res.WriteHeader(404)
   }
 }
 
@@ -62,6 +65,7 @@ func (handler DbLogger) AddNewEntry(res http.ResponseWriter, req *http.Request) 
     err := decoder.Decode(&msg)
     if err != nil && err != io.EOF {
       log.Println("Unable to decode terminal message. ", err)
+      res.WriteHeader(503)
       return
     }
   }
@@ -71,16 +75,55 @@ func (handler DbLogger) AddNewEntry(res http.ResponseWriter, req *http.Request) 
   
   if len(msg.Msg) == 0 {
     log.Println("Empty message! For terminal ", id_str)
+    res.WriteHeader(503)
     return
   }
 
   id, err := strconv.ParseUint(id_str, 10, 64)
   if err != nil {
     log.Println(err)
+    res.WriteHeader(503)
     return
   }
 
   go handler.storeEntry(id, msg.Msg)
+}
 
-  res.WriteHeader(200)
+func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
+  vars := mux.Vars(req)
+  id_str := vars["id"]
+  id, err := strconv.ParseUint(id_str, 10, 64)
+  if err != nil {
+    log.Println(err)
+    res.WriteHeader(503)
+    return
+  }
+
+  type entryType struct {
+    Timestamp string `json:"timestamp"`
+    Message string `json:"message"`
+  }
+  type responseType struct {
+    Entries []entryType `json:"entries"`
+  }
+
+  entries := responseType{}
+  sync := make(chan bool)
+  go func() {
+    logEntries := make([]LogEntry, 0)
+    handler.connection.Where("terminal_id = ?", id).Find(&logEntries)
+
+    entries.Entries = make([]entryType, len(logEntries))
+
+    for i, v := range logEntries {
+      entries.Entries[i] = entryType{ v.Timestamp, v.Message }
+    }
+
+    sync <- true
+  }()
+
+
+  encoder := json.NewEncoder(res)
+  <- sync
+  encoder.Encode(entries)
 }
