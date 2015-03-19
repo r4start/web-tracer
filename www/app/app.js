@@ -14,17 +14,12 @@ var submit_debug_id_by_enter = function(event) {
   }
 };
 
-var interval_object = null;
 var get_ids = function(event) {
   if (event.which != 13) {
     return
   }
 
-  if (interval_object != null) {
-    clearInterval(interval_object);
-  }
-
-  interval_object = setInterval(ids_fetcher, 15000);
+  ids_fetcher();
 };
 
 var on_loaded = function() {
