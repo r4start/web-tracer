@@ -46,11 +46,14 @@ func (handler DbLogger) PrepareDB() {
 func (handler DbLogger) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   if req.Method == "GET" {
     handler.GetLogs(res, req)
+    return
   } else if req.Method == "POST" {
     handler.AddNewEntry(res, req)
+    return
   } else {
     fmt.Fprintf(res, "404")
     res.WriteHeader(404)
+    return
   }
 }
 
