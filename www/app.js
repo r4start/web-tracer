@@ -1,9 +1,4 @@
-var fire_timer = function() {
-  alert('it is time!');
-};
-
 var start_trace = function() {
-  // setInterval(fire_timer, 6000);
   var id = $('#debug_id').val();
   if (isNaN(id)) {
     alert('Not a number!');
@@ -19,9 +14,23 @@ var submit_debug_id_by_enter = function(event) {
   }
 };
 
+var interval_object = null;
+var get_ids = function(event) {
+  if (event.which != 13) {
+    return
+  }
+
+  if (interval_object != null) {
+    clearInterval(interval_object);
+  }
+
+  interval_object = setInterval(ids_fetcher, 15000);
+};
+
 var on_loaded = function() {
   $('#start_trace_btn').on('click', start_trace);
   $('#debug_id').keyup(submit_debug_id_by_enter);
+  $('#service_id').keyup(get_ids);
 };
 
 $(document).ready(on_loaded);
