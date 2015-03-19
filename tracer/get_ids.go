@@ -1,7 +1,6 @@
 package tracer
 
 import (
-  "log"
   "net/http"
   "encoding/json"
 
@@ -45,6 +44,4 @@ func (handler IdLister) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
   <- signal
   encoder.Encode(ids)
-
-  go log.Println("Got ids ", ids.Ids)
 }

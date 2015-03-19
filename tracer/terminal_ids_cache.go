@@ -64,14 +64,7 @@ func (cache *TerminalIdsCache) AppendId(id uint64) {
   cache.guard.Lock()
   defer cache.guard.Unlock()
 
-  outOfRange := len(cache.ids)
-  pos := sortutil.SearchUint64s(cache.ids, id)
-  if pos != outOfRange {
-    return    
-  }
-
   cache.ids = append(cache.ids, id)
-
   sort.Sort(Uint64Slice(cache.ids))
   cache.ids = cache.ids[:sortutil.Dedupe(Uint64Slice(cache.ids))]
 }

@@ -50,14 +50,7 @@ func main() {
     router := mux.NewRouter()
     router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
-    var idsCache tracer.TerminalIdsCache
-
-    {
-      idsCache = tracer.NewTerminalIdsCache()
-      idsCache.AppendIds(tracer.LoadIdsFromDb(params.DbName))
-
-      log.Println("Got ids ", idsCache.GetIds())
-    }
+    var idsCache = tracer.NewTerminalIdsCache()
 
     {
       writeHandler, err := tracer.NewDbLogger(params.DbName)
@@ -80,6 +73,8 @@ func main() {
         router.Handle("/ids", idsLister)
       }
     }
+
+    idsCache.AppendIds(tracer.LoadIdsFromDb(params.DbName))
 
     router.PathPrefix("/").Handler(http.FileServer(http.Dir(params.SiteRoot)))
 
