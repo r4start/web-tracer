@@ -25,7 +25,7 @@ func getServeAddress() ServerParameters {
   flag.StringVar(&params.Host, "host", "localhost", "IP address for listening")
   flag.StringVar(&params.Port, "port", "80", "Port number")
   flag.StringVar(&params.DbName, "dbname", "tracer.db", "Database name or path")
-  flag.StringVar(&params.SiteRoot, "site-root", "www/", "Path to site root folder")
+  flag.StringVar(&params.SiteRoot, "site-root", "", "Path to site root folder")
 
   flag.Parse()
 
@@ -46,42 +46,40 @@ func isSiteRootExists(path string) bool {
 func main() {
   params := getServeAddress()
 
-  if isSiteRootExists(params.SiteRoot) {
-    router := mux.NewRouter()
-    router.NotFoundHandler = http.HandlerFunc(notFoundPage)
+  router := mux.NewRouter()
+  router.NotFoundHandler = http.HandlerFunc(notFoundPage)
 
-    var idsCache = tracer.NewTerminalIdsCache()
+  var idsCache = tracer.NewTerminalIdsCache()
 
-    {
-      writeHandler, err := tracer.NewDbLogger(params.DbName)
-      if err != nil {
-        log.Fatal(err)
-      } else {
-        writeHandler.IdsCache = &idsCache
-        router.Handle("/terminal/{id:[0-9]+}", writeHandler)
-      }
-
-      writeHandler.PrepareDB()
+  {
+    writeHandler, err := tracer.NewDbLogger(params.DbName)
+    if err != nil {
+      log.Fatal(err)
+    } else {
+      writeHandler.IdsCache = &idsCache
+      router.Handle("/terminal/{id:[0-9]+}", writeHandler)
     }
 
-    {
-      idsLister, err := tracer.NewIdLister(params.DbName)
-      if err != nil {
-        log.Fatal(err)
-      } else {
-        idsLister.IdsCache = &idsCache
-        router.Handle("/ids", idsLister)
-      }
-    }
-
-    idsCache.AppendIds(tracer.LoadIdsFromDb(params.DbName))
-
-    router.PathPrefix("/").Handler(http.FileServer(http.Dir(params.SiteRoot)))
-
-    http.Handle("/", router)
-  } else {
-    log.Fatal("Please specify site root.")
+    writeHandler.PrepareDB()
   }
+
+  {
+    idsLister, err := tracer.NewIdLister(params.DbName)
+    if err != nil {
+      log.Fatal(err)
+    } else {
+      idsLister.IdsCache = &idsCache
+      router.Handle("/ids", idsLister)
+    }
+  }
+
+  idsCache.AppendIds(tracer.LoadIdsFromDb(params.DbName))
+
+  if isSiteRootExists(params.SiteRoot) {
+    router.PathPrefix("/").Handler(http.FileServer(http.Dir(params.SiteRoot)))
+  }
+ 
+  http.Handle("/", router)
 
   bind := fmt.Sprintf("%s:%s", params.Host, params.Port)
   
