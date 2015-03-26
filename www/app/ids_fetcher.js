@@ -15,18 +15,8 @@ var ids_fetcher = function() {
 
     $('#debug_id').autocomplete({ source : response_obj.ids.map(String) });
 
-    //stop_fetching();
-
   };
 
   request.open("GET", "http://" + $('#service_addr').val() + "/ids", true);
   request.send();
-};
-
-var stop_fetching = function() {
-  if (id_refresher === null) {
-    return;
-  }
-
-  clearInterval(id_refresher);
 };
