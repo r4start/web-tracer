@@ -4,6 +4,8 @@ var ids_fetcher = function() {
   var request = new XMLHttpRequest();
 
   request.onload = function() {
+    setTimeout(ids_fetcher, 10000);
+    
     if (this.status != 200) {
       return;
     }
@@ -13,9 +15,8 @@ var ids_fetcher = function() {
 
     $('#debug_id').autocomplete({ source : response_obj.ids.map(String) });
 
-    stop_fetching();
+    //stop_fetching();
 
-    setInterval(ids_fetcher, 10000);
   };
 
   request.open("GET", "http://" + $('#service_addr').val() + "/ids", true);
