@@ -57,6 +57,18 @@ func newAddLogRecordRequest(message string,
   return req
 }
 
+func newBadAddLogRecordRequest(terminalId uint64, t *testing.T) *http.Request {
+  url := "/terminal/" + strconv.FormatUint(terminalId, 10)
+  jsonRequest := []byte(`{ "mssage" : "aslkdj" }`)
+
+  req, e := http.NewRequest("POST", url, bytes.NewBuffer(jsonRequest))
+  if  e != nil {
+    t.Fatal(e)
+  }
+
+  return req
+}
+
 func newGetLogsRequest(terminalId uint64,
                        t *testing.T) *http.Request {
   url := "/terminal/" + strconv.FormatUint(terminalId, 10)
@@ -84,11 +96,16 @@ func decodeResponse(data io.Reader, t *testing.T) *responseType {
 func TestSendRecvMessage(t *testing.T) {
   var termId uint64 = 177
   msg := "helo youg"
+
   testServer := newTestEnv(t)
   req := newAddLogRecordRequest(msg, termId, t)
 
   recorder := httptest.NewRecorder()
-  go testServer.ServeHTTP(recorder, req)
+  testServer.ServeHTTP(recorder, req)
+
+  if recorder.Code != http.StatusOK {
+    t.Fatal("Server returned code ", recorder.Code)
+  }
 
   // Timeout is necessary due the server must have some
   // extra time for adding a new record.
@@ -99,6 +116,10 @@ func TestSendRecvMessage(t *testing.T) {
   recorder = httptest.NewRecorder()
 
   testServer.ServeHTTP(recorder, req)
+
+  if recorder.Code != http.StatusOK {
+    t.Fatal("Server returned code ", recorder.Code)
+  }
 
   t.Log("Got response ", recorder.Body.String())
 
@@ -126,5 +147,17 @@ func TestSendRecvMessage(t *testing.T) {
 }
 
 func TestLogBadMessage(t *testing.T) {
-  // testServer := newTestEnv(t)
+  var id uint64 = 17
+  
+  testServer := newTestEnv(t)
+  req := newBadAddLogRecordRequest(id, t)
+
+  recorder := httptest.NewRecorder()
+  testServer.ServeHTTP(recorder, req)
+
+  if recorder.Code != 503 {
+    t.Fatal("Wrong response status. Expected 503. Got ", recorder.Code)
+  }
+
+  t.Log("Response code is ", recorder.Code)
 }
