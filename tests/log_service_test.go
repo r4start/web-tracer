@@ -93,6 +93,31 @@ func decodeResponse(data io.Reader, t *testing.T) *responseType {
   return &logEntries
 }
 
+func sendRequestToServer(srv *mux.Router,
+                         req *http.Request,
+                         expectedCode int,
+                         t *testing.T) *httptest.ResponseRecorder {
+  recorder := httptest.NewRecorder()
+  srv.ServeHTTP(recorder, req)
+
+  if recorder.Code != expectedCode {
+    t.Fatal("Server returned code ", recorder.Code)
+  }
+
+  return recorder
+}
+
+func decodeMessages(logResponse *responseType, t *testing.T) {
+  for i, v := range logResponse.Entries {
+    decodeBytes, err := base64.StdEncoding.DecodeString(v.Message)
+    if err != nil {
+      t.Fatal(err)
+    }
+
+    logResponse.Entries[i].Message = string(decodeBytes)
+  }
+}
+
 func TestSendRecvMessage(t *testing.T) {
   var termId uint64 = 177
   msg := "helo youg"
@@ -100,12 +125,7 @@ func TestSendRecvMessage(t *testing.T) {
   testServer := newTestEnv(t)
   req := newAddLogRecordRequest(msg, termId, t)
 
-  recorder := httptest.NewRecorder()
-  testServer.ServeHTTP(recorder, req)
-
-  if recorder.Code != http.StatusOK {
-    t.Fatal("Server returned code ", recorder.Code)
-  }
+  go sendRequestToServer(testServer, req, http.StatusOK, t)
 
   // Timeout is necessary due the server must have some
   // extra time for adding a new record.
@@ -113,14 +133,7 @@ func TestSendRecvMessage(t *testing.T) {
 
   req = newGetLogsRequest(termId, t)
 
-  recorder = httptest.NewRecorder()
-
-  testServer.ServeHTTP(recorder, req)
-
-  if recorder.Code != http.StatusOK {
-    t.Fatal("Server returned code ", recorder.Code)
-  }
-
+  recorder := sendRequestToServer(testServer, req, http.StatusOK, t)
   t.Log("Got response ", recorder.Body.String())
 
   logEntries := decodeResponse(recorder.Body, t)
@@ -129,14 +142,7 @@ func TestSendRecvMessage(t *testing.T) {
     t.Fatal("Log entries length doesn`t equal")
   }
 
-  for i, v := range logEntries.Entries {
-    decodeBytes, err := base64.StdEncoding.DecodeString(v.Message)
-    if err != nil {
-      t.Fatal(err)
-    }
-
-    logEntries.Entries[i].Message = string(decodeBytes)
-  }
+  decodeMessages(logEntries, t)
 
   t.Log("Decoded json ", *logEntries)
 
@@ -160,4 +166,41 @@ func TestLogBadMessage(t *testing.T) {
   }
 
   t.Log("Response code is ", recorder.Code)
+}
+
+func TestSeveralMessages(t *testing.T) {
+  msgCount := 10
+  msg := "Dude roll it over"
+  var termId uint64 = 604
+
+  testServer := newTestEnv(t)
+
+  for i := 0; i < msgCount; i++ {
+    req := newAddLogRecordRequest(msg, termId, t)
+    sendRequestToServer(testServer, req, http.StatusOK, t)
+  }
+
+  // Timeout is necessary due the server must have some
+  // extra time for adding a new record.
+  time.Sleep(5000)
+
+  req := newGetLogsRequest(termId, t)
+  recorder := sendRequestToServer(testServer, req, http.StatusOK, t)
+
+  t.Log("Got response ", recorder.Body.String())
+
+  logEntries := decodeResponse(recorder.Body, t)
+  if len(logEntries.Entries) != msgCount {
+    t.Fatal("Log entries length doesn`t equal")
+  }
+
+  decodeMessages(logEntries, t)
+
+  t.Log("Decoded json ", *logEntries)
+  for _, v := range logEntries.Entries {
+    if v.Message != msg {
+      t.Fatal("Message text is wrong!\n Got ", v.Message,
+              "\nShould be ", msg)
+    }
+  }
 }
