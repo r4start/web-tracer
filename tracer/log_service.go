@@ -2,7 +2,6 @@ package tracer
 
 import (
   "io"
-  "fmt"
   "log"
   "time"
   "strconv"
@@ -51,8 +50,7 @@ func (handler DbLogger) ServeHTTP(res http.ResponseWriter, req *http.Request) {
     handler.AddNewEntry(res, req)
     return
   } else {
-    fmt.Fprintf(res, "404")
-    res.WriteHeader(404)
+    res.WriteHeader(http.StatusBadRequest)
     return
   }
 }
@@ -69,7 +67,7 @@ func (handler DbLogger) AddNewEntry(res http.ResponseWriter,
     err := decoder.Decode(&msg)
     if err != nil && err != io.EOF {
       log.Println("Unable to decode terminal message. ", err)
-      res.WriteHeader(503)
+      res.WriteHeader(http.StatusBadRequest)
       return
     }
   }
@@ -79,14 +77,14 @@ func (handler DbLogger) AddNewEntry(res http.ResponseWriter,
   
   if len(msg.Msg) == 0 {
     log.Println("Empty message! For terminal ", id_str)
-    res.WriteHeader(503)
+    res.WriteHeader(http.StatusBadRequest)
     return
   }
 
   id, err := strconv.ParseUint(id_str, 10, 64)
   if err != nil {
     log.Println(err)
-    res.WriteHeader(503)
+    res.WriteHeader(http.StatusInternalServerError)
     return
   }
 
@@ -99,7 +97,7 @@ func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
   id, err := strconv.ParseUint(id_str, 10, 64)
   if err != nil {
     log.Println(err)
-    res.WriteHeader(503)
+    res.WriteHeader(http.StatusInternalServerError)
     return
   }
 

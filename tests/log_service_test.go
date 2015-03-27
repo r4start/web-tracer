@@ -155,8 +155,8 @@ func TestLogBadMessage(t *testing.T) {
   recorder := httptest.NewRecorder()
   testServer.ServeHTTP(recorder, req)
 
-  if recorder.Code != 503 {
-    t.Fatal("Wrong response status. Expected 503. Got ", recorder.Code)
+  if recorder.Code != http.StatusBadRequest {
+    t.Fatal("Wrong response status. Expected 400. Got ", recorder.Code)
   }
 
   t.Log("Response code is ", recorder.Code)
