@@ -3,28 +3,22 @@ package tracer
 import (
   "net/http"
   "encoding/json"
-
-  "github.com/jinzhu/gorm"
-  _ "github.com/mattn/go-sqlite3"
 )
 
 type IdLister struct {
-  connection *gorm.DB
-
-  IdsCache *TerminalIdsCache
+  idsCache *TerminalIdsCache
 }
 
-func NewIdLister(dbName string) (IdLister, error) {
-  conn, err := gorm.Open("sqlite3", dbName)
-  return IdLister{&conn, nil}, err
+func NewIdLister(cache *TerminalIdsCache) IdLister {
+  return IdLister{cache}
 }
 
 func (handler IdLister) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   if req.Method != "GET" {
-    res.WriteHeader(404)
+    res.WriteHeader(http.StatusBadRequest)
     return
-  } else if handler.IdsCache == nil {
-    res.WriteHeader(503)
+  } else if handler.idsCache == nil {
+    res.WriteHeader(http.StatusInternalServerError)
     return
   }
 
@@ -36,7 +30,7 @@ func (handler IdLister) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   signal := make(chan bool)
 
   go func() {
-    ids.Ids = handler.IdsCache.GetIds()
+    ids.Ids = handler.idsCache.GetIds()
     signal <- true
   }()
 

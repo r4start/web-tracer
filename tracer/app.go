@@ -46,13 +46,8 @@ func StartServer(params ServerParameters) {
   }
 
   {
-    idsLister, err := NewIdLister(params.DbName)
-    if err != nil {
-      log.Fatal(err)
-    } else {
-      idsLister.IdsCache = &idsCache
-      router.Handle("/ids", idsLister)
-    }
+    idsLister := NewIdLister(&idsCache)
+    router.Handle("/ids", idsLister)  
   }
 
   idsCache.AppendIds(LoadIdsFromDb(params.DbName))
