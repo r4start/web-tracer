@@ -11,13 +11,13 @@ import (
 )
 
 type TerminalIdsCache struct {
-  ids []uint64
+  ids map[uint64] interface{}
   guard sync.RWMutex
 }
 
 func NewTerminalIdsCache() TerminalIdsCache {
   newCache := TerminalIdsCache{}
-  newCache.ids = make([]uint64, 0)
+  newCache.ids = make(map[uint64] interface{}, 0)
   newCache.guard = sync.RWMutex{}
 
   return newCache
@@ -52,27 +52,32 @@ func LoadIdsFromDb(dbName string) []uint64 {
 }
 
 func (cache *TerminalIdsCache) AppendIds(ids []uint64) {
+  sort.Sort(Uint64Slice(ids))
+  ids = ids[:sortutil.Dedupe(Uint64Slice(ids))]
+
   cache.guard.Lock()
   defer cache.guard.Unlock()
 
-  cache.ids = append(cache.ids, ids...)
-  sort.Sort(Uint64Slice(cache.ids))
-  cache.ids = cache.ids[:sortutil.Dedupe(Uint64Slice(cache.ids))]
+  for _, v := range ids {
+    cache.ids[v] = nil
+  }
 }
 
 func (cache *TerminalIdsCache) AppendId(id uint64) {
   cache.guard.Lock()
   defer cache.guard.Unlock()
 
-  cache.ids = append(cache.ids, id)
-  sort.Sort(Uint64Slice(cache.ids))
-  cache.ids = cache.ids[:sortutil.Dedupe(Uint64Slice(cache.ids))]
+  cache.ids[id] = nil
 }
 
 func (cache *TerminalIdsCache) GetIds() []uint64 {
   cache.guard.RLock()
   defer cache.guard.RUnlock()
-  ids := cache.ids
+  ids := make([]uint64, 0, len(cache.ids))
+
+  for k, _ := range cache.ids {
+    ids = append(ids, k)
+  }
 
   return ids
 }
