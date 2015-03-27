@@ -57,7 +57,8 @@ func (handler DbLogger) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   }
 }
 
-func (handler DbLogger) AddNewEntry(res http.ResponseWriter, req *http.Request) {
+func (handler DbLogger) AddNewEntry(res http.ResponseWriter,
+                                    req *http.Request) {
   decoder := json.NewDecoder(req.Body)
   type message struct {
     Msg string `json:"message"`

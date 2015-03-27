@@ -1,11 +1,11 @@
 package tracercheck
 
 import (
-  _ "fmt"
   "io"
   "time"
   "bytes"
   "testing"
+  "strconv"
   "net/http"
   "encoding/json"
   "encoding/base64"
@@ -16,7 +16,16 @@ import (
   "github.com/r4start/web-tracer/tracer"
 )
 
-func TestLogSingleMessage(t *testing.T) {
+type entryType struct {
+  Timestamp string `json:"timestamp"`
+  Message string `json:"message"`
+}
+
+type responseType struct {
+  Entries []entryType `json:"entries"`
+}
+
+func newTestEnv(t *testing.T) *mux.Router {
   dbName := ":memory:"
   logger, err := tracer.NewDbLogger(dbName)
   if err != nil {
@@ -31,48 +40,69 @@ func TestLogSingleMessage(t *testing.T) {
   router := mux.NewRouter()
   router.Handle("/terminal/{id:[0-9]+}", logger)
 
-  recorder := httptest.NewRecorder()
-  url := "/terminal/177"
-  messageText := "helo youg"
-  jsonRequest := []byte(`{ "message" : "` + messageText + `" }`)
+  return router
+}
+
+func newAddLogRecordRequest(message string,
+                            terminalId uint64,
+                            t *testing.T) *http.Request {
+  url := "/terminal/" + strconv.FormatUint(terminalId, 10)
+  jsonRequest := []byte(`{ "message" : "` + message + `" }`)
 
   req, e := http.NewRequest("POST", url, bytes.NewBuffer(jsonRequest))
   if  e != nil {
     t.Fatal(e)
   }
 
-  go router.ServeHTTP(recorder, req)
+  return req
+}
+
+func newGetLogsRequest(terminalId uint64,
+                       t *testing.T) *http.Request {
+  url := "/terminal/" + strconv.FormatUint(terminalId, 10)
+
+  req, e := http.NewRequest("GET", url, nil)
+  if e != nil {
+    t.Fatal(e)
+  }
+
+  return req
+}
+
+func decodeResponse(data io.Reader, t *testing.T) *responseType {
+  jsonDecoder := json.NewDecoder(data)
+
+  var logEntries responseType
+  err := jsonDecoder.Decode(&logEntries)
+  if err != nil && err != io.EOF {
+    t.Fatal(err)
+  }
+
+  return &logEntries
+}
+
+func TestSendRecvMessage(t *testing.T) {
+  var termId uint64 = 177
+  msg := "helo youg"
+  testServer := newTestEnv(t)
+  req := newAddLogRecordRequest(msg, termId, t)
+
+  recorder := httptest.NewRecorder()
+  go testServer.ServeHTTP(recorder, req)
 
   // Timeout is necessary due the server must have some
   // extra time for adding a new record.
   time.Sleep(5000)
 
-  req, e = http.NewRequest("GET", url, nil)
-  if e != nil {
-    t.Fatal(e)
-  }
+  req = newGetLogsRequest(termId, t)
 
   recorder = httptest.NewRecorder()
 
-  router.ServeHTTP(recorder, req)
+  testServer.ServeHTTP(recorder, req)
 
-  t.Log("Got responce ", recorder.Body.String())
-  
-  type entryType struct {
-    Timestamp string `json:"timestamp"`
-    Message string `json:"message"`
-  }
-  type responseType struct {
-    Entries []entryType `json:"entries"`
-  }
+  t.Log("Got response ", recorder.Body.String())
 
-  jsonDecoder := json.NewDecoder(recorder.Body)
-
-  var logEntries responseType
-  err = jsonDecoder.Decode(&logEntries)
-  if err != nil && err != io.EOF {
-    t.Fatal(err)
-  }
+  logEntries := decodeResponse(recorder.Body, t)
 
   if len(logEntries.Entries) != 1 {
     t.Fatal("Log entries length doesn`t equal")
@@ -87,10 +117,14 @@ func TestLogSingleMessage(t *testing.T) {
     logEntries.Entries[i].Message = string(decodeBytes)
   }
 
-  t.Log("Decoded json ", logEntries)
+  t.Log("Decoded json ", *logEntries)
 
-  if logEntries.Entries[0].Message != messageText {
+  if logEntries.Entries[0].Message != msg {
     t.Fatal("Message text is wrong!\n Got ", logEntries.Entries[0].Message,
-            "\nShould be ", messageText)
+            "\nShould be ", msg)
   }
+}
+
+func TestLogBadMessage(t *testing.T) {
+  // testServer := newTestEnv(t)
 }
