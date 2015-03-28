@@ -65,6 +65,6 @@ func StartServer(params ServerParameters) {
   err := http.ListenAndServe(bind, nil)
   
   if err != nil {
-    panic(err)
+    log.Fatal(err)
   }
 }
