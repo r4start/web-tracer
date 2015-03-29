@@ -14,8 +14,18 @@ var tracer = function() {
 
     var response_obj = JSON.parse(this.responseText);
 
+    $('.log_entry').remove();
+
     response_obj.entries.forEach(function(e) {
-      console.log(e.timestamp + " " + atob(e.message));
+      var message = atob(e.message);
+      console.log(e.timestamp + " " + message);
+
+      $('<tr class="log_entry"><td>' +
+        e.timestamp +
+        '</td><td>' +
+        message +
+        '</td></tr>')
+      .appendTo('#log_entries_view');
     });
   };
 

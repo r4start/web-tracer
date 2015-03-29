@@ -1,8 +1,11 @@
 <!doctype html>
 <html>
   <link rel="stylesheet" href="external/jquery-ui/jquery-ui.min.css">
+  <link rel="stylesheet" href="css/tablesorter_style.css">
+
   <script type="text/javascript" src="external/jquery/jquery.js"></script>
   <script type="text/javascript" src="external/jquery-ui/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="external/jquery/addons/jquery.tablesorter.js"></script>
   <script type="text/javascript" src="app/ids_fetcher.js"></script>
   <script type="text/javascript" src="app/tracer.js"></script>
   <script type="text/javascript" src="app/app.js"></script>
@@ -36,7 +39,18 @@
         </td>
       </tr>
     </table>
-    
-    <textarea id="trace_output" name="trace_view" cols="80" readonly="true"></textarea>
+
+    <table id="logs_table" class="tablesorter">
+      <thead>
+        <tr>
+          <th>
+            Time
+          </th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody id="log_entries_view">
+      </tbody>
+    </table>
   </body>
 </html>
