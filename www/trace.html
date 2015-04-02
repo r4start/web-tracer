@@ -15,30 +15,14 @@
   </head>
 
   <body>
-    <table>
-      <tr>
-        <td>
-          Logging service address:
-        </td>
-        <td>
-          <input id="service_addr" value="Web tracer address">
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Debugging id
-        </td>
-        <td>
-          <div class="ui-widget">
-            <label for="debug_id">Debugging id </label>
-            <input id="debug_id" type="text" name="debug_id" value="Choose debug id" />
-          </div>
-        </td>
-        <td>
-          <input id="start_trace_btn" type="button" value="Start trace" />
-        </td>
-      </tr>
-    </table>
+    <div class="ui-widget">
+      <label for="service_addr">Server address</label>
+      <input id="service_addr" type="text" name="service_addr" />
+    </div>
+    <div class="ui-widget">
+      <label for="debug_id">Debugging id</label>
+      <input id="debug_id" type="text" name="debug_id" value="Choose debug id" />
+    </div>
 
     <table id="logs_table" class="tablesorter">
       <thead>
