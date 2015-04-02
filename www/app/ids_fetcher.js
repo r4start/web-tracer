@@ -6,7 +6,7 @@ var IdsFetcher = function() {
 
     request.open("GET", "http://" + $('#service_addr').val() + "/ids", true);
     request.send();
-  }
+  };
 
   this.ids_loaded = function () {
     setTimeout(this.fetch_ids, 10000);
@@ -19,5 +19,5 @@ var IdsFetcher = function() {
     console.log(response_obj.ids);
 
     $('#debug_id').autocomplete({source: response_obj.ids.map(String)});
-  }
+  };
 };
