@@ -17,7 +17,9 @@ var get_ids = function (event) {
     return;
   }
 
-  ids_fetcher.fetch_ids();
+  if (ids_fetcher.timeout_obj == null) {
+    ids_fetcher.fetch_ids();
+  }
 };
 
 var on_loaded = function() {
