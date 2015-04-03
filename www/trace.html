@@ -1,41 +1,62 @@
 <!doctype html>
 <html>
-  <link rel="stylesheet" href="external/jquery-ui/jquery-ui.min.css">
-  <link rel="stylesheet" href="css/tablesorter_style.css">
+<link rel="stylesheet" href="external/jquery-ui/jquery-ui.min.css">
+<link rel="stylesheet" href="css/tablesorter_style.css">
+<link rel="stylesheet" href="external/jquery/addons/tablesorter/jquery.tablesorter.pager.css">
 
-  <script type="text/javascript" src="external/jquery/jquery.js"></script>
-  <script type="text/javascript" src="external/jquery-ui/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="external/jquery/addons/jquery.tablesorter.js"></script>
-  <script type="text/javascript" src="app/ids_fetcher.js"></script>
-  <script type="text/javascript" src="app/tracer.js"></script>
-  <script type="text/javascript" src="app/app.js"></script>
+<script type="text/javascript" src="external/jquery/jquery.js"></script>
+<script type="text/javascript" src="external/jquery-ui/jquery-ui.min.js"></script>
+<script type="text/javascript" src="external/jquery/addons/tablesorter/jquery.tablesorter.js"></script>
+<script type="text/javascript" src="external/jquery/addons/tablesorter/jquery.tablesorter.pager.js"></script>
+<script type="text/javascript" src="app/ids_fetcher.js"></script>
+<script type="text/javascript" src="app/tracer.js"></script>
+<script type="text/javascript" src="app/app.js"></script>
 
-  <head>
-    <h1>Web tracer</h1>
-  </head>
+<head>
+  <h1>Web tracer</h1>
+</head>
 
-  <body>
-    <div class="ui-widget">
-      <label for="service_addr">Server address</label>
-      <input id="service_addr" type="text" name="service_addr" />
-    </div>
-    <div class="ui-widget">
-      <label for="debug_id">Debugging id</label>
-      <input id="debug_id" type="text" name="debug_id" value="Choose debug id" />
-      <input type="checkbox" id="autoupdate"><label for="autoupdate">Automatically update logs</label>
-    </div>
+<body>
 
-    <table id="logs_table" class="tablesorter">
-      <thead>
-        <tr>
-          <th>
-            Time
-          </th>
-          <th>Message</th>
-        </tr>
-      </thead>
-      <tbody id="log_entries_view">
-      </tbody>
-    </table>
-  </body>
+<div class="ui-widget">
+  <label for="service_addr">Server address</label>
+  <input id="service_addr" type="text" name="service_addr"/>
+</div>
+
+<div class="ui-widget">
+  <label for="debug_id">Debugging id</label>
+  <input id="debug_id" type="text" name="debug_id" value="Choose debug id"/>
+  <input type="checkbox" id="autoupdate"><label for="autoupdate">Automatically update logs</label>
+</div>
+
+<table id="logs_table" class="tablesorter">
+  <thead>
+  <tr>
+    <th>
+      Time
+    </th>
+    <th>Message</th>
+  </tr>
+  </thead>
+  <tbody id="log_entries_view">
+  </tbody>
+</table>
+
+<div id="pager" class="pager">
+  <form>
+    <img src="external/jquery/addons/tablesorter/img/first.png" class="first">
+    <img src="external/jquery/addons/tablesorter/img/prev.png" class="prev">
+    <input class="pagedisplay" type="text">
+    <img src="external/jquery/addons/tablesorter/img/next.png" class="next">
+    <img src="external/jquery/addons/tablesorter/img/last.png" class="last">
+    <select class="pagesize">
+      <option selected="selected" value="10">10</option>
+      <option value="20">20</option>
+      <option value="30">30</option>
+      <option value="40">40</option>
+    </select>
+  </form>
+</div>
+
+</body>
 </html>
