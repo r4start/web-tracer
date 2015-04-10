@@ -31,6 +31,52 @@ func (logger DbLogger) storeEntry(termianlId uint64, msg string) {
   go logger.IdsCache.AppendId(termianlId)
 }
 
+func (logger DbLogger) buildLogs(res http.ResponseWriter,
+                                 term_id chan uint64,
+                                 start_time chan string,
+                                 quit_signal chan bool) {
+  type entryType struct {
+    Timestamp string `json:"timestamp"`
+    Message string `json:"message"`
+  }
+  type responseType struct {
+    Entries []entryType `json:"entries"`
+  }
+
+  entries := responseType{}
+
+  var id uint64
+
+  select {
+    case id = <-term_id:
+      break
+    case <- quit_signal:
+      return
+    case _ = (<-start_time):
+      break
+  }
+
+  sync := make(chan bool)
+  go func() {
+    logEntries := make([]LogEntry, 0)
+    logger.connection.Where("terminal_id = ?", id).Find(&logEntries)
+
+    entries.Entries = make([]entryType, len(logEntries))
+
+    for i, v := range logEntries {
+      entries.Entries[i] = entryType{ v.Timestamp, v.Message }
+    }
+
+    sync <- true
+  }()
+
+
+  encoder := json.NewEncoder(res)
+  <- sync
+  encoder.Encode(entries)
+  quit_signal <- true
+}
+
 func NewDbLogger(dbName string) (DbLogger, error) {
   conn, err := gorm.Open("sqlite3", dbName)
   return DbLogger{&conn, nil}, err
@@ -92,40 +138,22 @@ func (handler DbLogger) AddNewEntry(res http.ResponseWriter,
 }
 
 func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
+  id_sender := make(chan uint64)
+  time_sender := make(chan string)
+  quit_signal := make(chan bool)
+
+  go handler.buildLogs(res, id_sender, time_sender, quit_signal)
+
   vars := mux.Vars(req)
   id_str := vars["id"]
   id, err := strconv.ParseUint(id_str, 10, 64)
   if err != nil {
     log.Println(err)
     res.WriteHeader(http.StatusInternalServerError)
+    quit_signal <- true
     return
   }
 
-  type entryType struct {
-    Timestamp string `json:"timestamp"`
-    Message string `json:"message"`
-  }
-  type responseType struct {
-    Entries []entryType `json:"entries"`
-  }
-
-  entries := responseType{}
-  sync := make(chan bool)
-  go func() {
-    logEntries := make([]LogEntry, 0)
-    handler.connection.Where("terminal_id = ?", id).Find(&logEntries)
-
-    entries.Entries = make([]entryType, len(logEntries))
-
-    for i, v := range logEntries {
-      entries.Entries[i] = entryType{ v.Timestamp, v.Message }
-    }
-
-    sync <- true
-  }()
-
-
-  encoder := json.NewEncoder(res)
-  <- sync
-  encoder.Encode(entries)
+  id_sender <- id
+  <- quit_signal
 }
