@@ -35,8 +35,6 @@ var on_loaded = function() {
   var service_field = $('#service_addr');
   service_field.keyup(get_ids);
   service_field.val(location.host);
-
-  $('#logs_table').tablesorter();
 };
 
 $(document).ready(on_loaded);

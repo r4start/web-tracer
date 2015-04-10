@@ -26,6 +26,8 @@ var tracer = function() {
         message +
         '</td></tr>')
       .appendTo('#log_entries_view');
+
+      $("#logs_table").trigger("update");
     });
   };
 

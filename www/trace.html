@@ -7,10 +7,17 @@
 <script type="text/javascript" src="external/jquery/jquery.js"></script>
 <script type="text/javascript" src="external/jquery-ui/jquery-ui.min.js"></script>
 <script type="text/javascript" src="external/jquery/addons/tablesorter/jquery.tablesorter.js"></script>
-<script type="text/javascript" src="external/jquery/addons/tablesorter/jquery.tablesorter.pager.js"></script>
+<!--<script type="text/javascript" src="external/jquery/addons/tablesorter/jquery.tablesorter.pager.js"></script>-->
 <script type="text/javascript" src="app/ids_fetcher.js"></script>
 <script type="text/javascript" src="app/tracer.js"></script>
 <script type="text/javascript" src="app/app.js"></script>
+<!--<script type="text/javascript">-->
+  <!--$(function() {-->
+    <!--$("table")-->
+      <!--.tablesorter()-->
+      <!--.tablesorterPager({container : $("#pager")});-->
+  <!--});-->
+<!--</script>-->
 
 <head>
   <h1>Web tracer</h1>
@@ -44,22 +51,21 @@
   </tbody>
 </table>
 
-<div id="pager" class="pager">
-  <form>
-    <img src="external/jquery/addons/tablesorter/img/first.png" class="first">
-    <img src="external/jquery/addons/tablesorter/img/prev.png" class="prev">
-    <img src="external/jquery/addons/tablesorter/img/next.png" class="next">
-    <img src="external/jquery/addons/tablesorter/img/last.png" class="last">
-
-    <input class="pagedisplay" type="text">
-    <select class="pagesize">
-      <option selected="selected" value="10">10</option>
-      <option value="20">20</option>
-      <option value="30">30</option>
-      <option value="40">40</option>
-    </select>
-  </form>
-</div>
+<!--<div id="pager" class="pager">-->
+  <!--<form>-->
+    <!--<img src="external/jquery/addons/tablesorter/img/first.png" class="first" />-->
+    <!--<img src="external/jquery/addons/tablesorter/img/prev.png" class="prev" />-->
+    <!--<input class="pagedisplay" type="text" />-->
+    <!--<img src="external/jquery/addons/tablesorter/img/next.png" class="next" />-->
+    <!--<img src="external/jquery/addons/tablesorter/img/last.png" class="last" />-->
+    <!--<select class="pagesize">-->
+      <!--<option selected="selected" value="10">10</option>-->
+      <!--<option value="20">20</option>-->
+      <!--<option value="30">30</option>-->
+      <!--<option value="40">40</option>-->
+    <!--</select>-->
+  <!--</form>-->
+<!--</div>-->
 
 </body>
 </html>
