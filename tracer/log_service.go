@@ -32,9 +32,9 @@ func (logger DbLogger) storeEntry(termianlId uint64, msg string) {
 }
 
 func (logger DbLogger) buildLogs(res http.ResponseWriter,
-                                 term_id chan uint64,
-                                 start_time chan string,
-                                 quit_signal chan bool) {
+                                 termId <- chan uint64,
+                                 startTime <- chan string,
+                                 quitSignal chan bool) {
   type entryType struct {
     Timestamp string `json:"timestamp"`
     Message string `json:"message"`
@@ -46,14 +46,31 @@ func (logger DbLogger) buildLogs(res http.ResponseWriter,
   entries := responseType{}
 
   var id uint64
+  var timePoint string
 
-  select {
-    case id = <-term_id:
-      break
-    case <- quit_signal:
-      return
-    case _ = (<-start_time):
-      break
+  var status int = 0
+  const allGot = 2
+
+Loop:
+  for {
+    select {
+      case id = <-termId:
+        status += 1
+        if status == allGot {
+          break Loop
+        }
+        continue
+
+      case <- quitSignal:
+        return
+      
+      case timePoint = <-startTime:
+        status += 1
+        if status == allGot {
+          break Loop
+        }
+        continue
+    }
   }
 
   sync := make(chan bool)
@@ -74,7 +91,7 @@ func (logger DbLogger) buildLogs(res http.ResponseWriter,
   encoder := json.NewEncoder(res)
   <- sync
   encoder.Encode(entries)
-  quit_signal <- true
+  quitSignal <- true
 }
 
 func NewDbLogger(dbName string) (DbLogger, error) {
@@ -138,11 +155,11 @@ func (handler DbLogger) AddNewEntry(res http.ResponseWriter,
 }
 
 func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
-  id_sender := make(chan uint64)
-  time_sender := make(chan string)
-  quit_signal := make(chan bool)
+  idSender := make(chan uint64)
+  timeSender := make(chan string)
+  quitSignal := make(chan bool)
 
-  go handler.buildLogs(res, id_sender, time_sender, quit_signal)
+  go handler.buildLogs(res, idSender, timeSender, quitSignal)
 
   vars := mux.Vars(req)
   id_str := vars["id"]
@@ -150,10 +167,19 @@ func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
   if err != nil {
     log.Println(err)
     res.WriteHeader(http.StatusInternalServerError)
-    quit_signal <- true
+    quitSignal <- true
     return
   }
 
-  id_sender <- id
-  <- quit_signal
+  _, ok := req.Form["since"]
+
+  idSender <- id
+
+  if ok {
+    timeSender <- req.Form["since"][0]
+  } else {
+    timeSender <- ""
+  }
+
+  <- quitSignal
 }
