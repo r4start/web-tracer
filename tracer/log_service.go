@@ -76,7 +76,14 @@ Loop:
   sync := make(chan bool)
   go func() {
     logEntries := make([]LogEntry, 0)
-    logger.connection.Where("terminal_id = ?", id).Find(&logEntries)
+    if len(timePoint) == 0 {
+      logger.connection.Where("terminal_id = ?", id).Find(&logEntries)
+    } else {
+      log.Println(timePoint)
+      logger.connection.
+        Where("terminal_id = ? and timestamp >= ?", id, timePoint).
+        Find(&logEntries)
+    }
 
     entries.Entries = make([]entryType, len(logEntries))
 
@@ -171,12 +178,13 @@ func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
     return
   }
 
-  _, ok := req.Form["since"]
+  requestValues := req.URL.Query()
+  _, ok := requestValues["since"]
 
   idSender <- id
 
   if ok {
-    timeSender <- req.Form["since"][0]
+    timeSender <- requestValues["since"][0]
   } else {
     timeSender <- ""
   }
