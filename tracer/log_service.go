@@ -33,7 +33,7 @@ func (logger DbLogger) storeEntry(termianlId uint64, msg string) {
 
 func (logger DbLogger) buildLogs(res http.ResponseWriter,
                                  termId <- chan uint64,
-                                 startTime <- chan string,
+                                 startTime <- chan time.Time,
                                  quitSignal chan bool) {
   type entryType struct {
     Timestamp string `json:"timestamp"`
@@ -46,7 +46,7 @@ func (logger DbLogger) buildLogs(res http.ResponseWriter,
   entries := responseType{}
 
   var id uint64
-  var timePoint string
+  var timePoint time.Time
 
   var status int = 0
   const allGot = 2
@@ -76,13 +76,9 @@ Loop:
   sync := make(chan bool)
   go func() {
     logEntries := make([]LogEntry, 0)
-    if len(timePoint) == 0 {
-      logger.connection.Where("terminal_id = ?", id).Find(&logEntries)
-    } else {
-      logger.connection.
-        Where("terminal_id = ? and timestamp >= ?", id, timePoint).
+    logger.connection.
+        Where("terminal_id = ? and timestamp >= ?", id, timePoint.Format(time.RFC3339Nano)).
         Find(&logEntries)
-    }
 
     entries.Entries = make([]entryType, len(logEntries))
 
@@ -162,7 +158,7 @@ func (handler DbLogger) AddNewEntry(res http.ResponseWriter,
 
 func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
   idSender := make(chan uint64)
-  timeSender := make(chan string)
+  timeSender := make(chan time.Time)
   quitSignal := make(chan bool)
 
   go handler.buildLogs(res, idSender, timeSender, quitSignal)
@@ -183,7 +179,7 @@ func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
   idSender <- id
 
   if ok {
-    _, err := time.Parse(time.RFC3339Nano, requestValues["since"][0])
+    timePt, err := time.Parse(time.RFC3339Nano, requestValues["since"][0])
     if err != nil {
       log.Println(err)
       res.WriteHeader(http.StatusBadRequest)
@@ -191,9 +187,9 @@ func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
       return
     }
 
-    timeSender <- requestValues["since"][0]
+    timeSender <- timePt
   } else {
-    timeSender <- ""
+    timeSender <- time.Unix(0, 0)
   }
 
   <- quitSignal
