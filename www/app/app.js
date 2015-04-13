@@ -1,4 +1,5 @@
 var ids_fetcher = new IdsFetcher();
+var auto_updater_observers = [];
 
 var submit_debug_id_by_enter = function(event) {
   if (event.which != 13) {
@@ -22,7 +23,15 @@ var get_ids = function (event) {
   }
 };
 
+var auto_updater_toggled = function() {
+  auto_updater_observers.forEach(function(elem) {
+    elem();
+  });
+};
+
 var on_loaded = function() {
+  auto_updater_observers.push(function() { alert("Dummy callback."); });
+
   var dbg_id_field = $('#debug_id');
   dbg_id_field.keyup(submit_debug_id_by_enter);
 
@@ -35,6 +44,8 @@ var on_loaded = function() {
   var service_field = $('#service_addr');
   service_field.keyup(get_ids);
   service_field.val(location.host);
+
+  $('#autoupdate').click(auto_updater_toggled);
 };
 
 $(document).ready(on_loaded);
