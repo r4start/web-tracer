@@ -24,7 +24,7 @@ func (logger DbLogger) storeEntry(termianlId uint64, msg string) {
   encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
 
   entry := LogEntry{TerminalId : termianlId,
-                    Timestamp : time.Now().String(),
+                    Timestamp : time.Now().UTC().Format(time.RFC3339Nano),
                     Message : encodedMsg}
 
   go logger.connection.Create(&entry)
@@ -79,7 +79,6 @@ Loop:
     if len(timePoint) == 0 {
       logger.connection.Where("terminal_id = ?", id).Find(&logEntries)
     } else {
-      log.Println(timePoint)
       logger.connection.
         Where("terminal_id = ? and timestamp >= ?", id, timePoint).
         Find(&logEntries)
@@ -184,6 +183,14 @@ func (handler DbLogger) GetLogs(res http.ResponseWriter, req *http.Request) {
   idSender <- id
 
   if ok {
+    _, err := time.Parse(time.RFC3339Nano, requestValues["since"][0])
+    if err != nil {
+      log.Println(err)
+      res.WriteHeader(http.StatusBadRequest)
+      quitSignal <- true
+      return
+    }
+
     timeSender <- requestValues["since"][0]
   } else {
     timeSender <- ""
