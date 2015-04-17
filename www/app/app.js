@@ -1,6 +1,7 @@
-var ids_fetcher = new IdsFetcher();
-var auto_updater_observers = [];
+var ids_list_fetcher = new ids_fetcher();
 var log_fetcher = new log_tracer();
+
+var auto_updater_observers = [];
 
 var submit_debug_id_by_enter = function(event) {
   if (event.which != 13) {
@@ -11,7 +12,7 @@ var submit_debug_id_by_enter = function(event) {
 };
 
 var get_ids = function (event) {
-  if (ids_fetcher.fetch_started) {
+  if (ids_list_fetcher.fetch_started) {
     return;
   }
 
@@ -19,8 +20,8 @@ var get_ids = function (event) {
     return;
   }
 
-  if (ids_fetcher.timeout_obj == null) {
-    ids_fetcher.fetch_ids();
+  if (ids_list_fetcher.timeout_obj == null) {
+    ids_list_fetcher.fetch_ids();
   }
 };
 
@@ -32,7 +33,7 @@ var auto_updater_toggled = function() {
 };
 
 var on_loaded = function() {
-  auto_updater_observers.push(function(position) { alert("Dummy callback. " + position); });
+  auto_updater_observers.push(log_fetcher.auto_update_observer);
 
   var dbg_id_field = $('#debug_id');
   dbg_id_field.keyup(submit_debug_id_by_enter);

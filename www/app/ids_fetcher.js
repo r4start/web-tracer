@@ -1,4 +1,4 @@
-var IdsFetcher = function() {
+var ids_fetcher = function() {
   var obj_ref = this;
 
   obj_ref.timeout_obj = null;
