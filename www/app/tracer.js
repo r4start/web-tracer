@@ -1,36 +1,40 @@
-var tracer = function() {
-  var id = $('#debug_id').val();
-  if (isNaN(id)) {
-    alert('Not a number!');
-    return;
-  }
+var log_tracer = function() {
+  var obj_ref = this;
 
-  var request = new XMLHttpRequest();
-
-  request.onload = function() {
-    if (this.status != 200) {
+  obj_ref.get_all_logs = function() {
+    var id = $('#debug_id').val();
+    if (isNaN(id)) {
+      alert('Not a number!');
       return;
     }
 
-    var response_obj = JSON.parse(this.responseText);
+    var request = new XMLHttpRequest();
 
-    $('.log_entry').remove();
+    request.onload = function() {
+      if (this.status != 200) {
+        return;
+      }
 
-    response_obj.entries.forEach(function(e) {
-      var message = atob(e.message);
-      console.log(e.timestamp + " " + message);
+      var response_obj = JSON.parse(this.responseText);
 
-      $('<tr class="log_entry"><td>' +
+      $('.log_entry').remove();
+
+      response_obj.entries.forEach(function(e) {
+        var message = atob(e.message);
+        console.log(e.timestamp + " " + message);
+
+        $('<tr class="log_entry"><td>' +
         e.timestamp +
         '</td><td>' +
         message +
         '</td></tr>')
-      .appendTo('#log_entries_view');
+          .appendTo('#log_entries_view');
 
-      $("#logs_table").trigger("update");
-    });
+        $("#logs_table").trigger("update");
+      });
+    };
+
+    request.open("GET", "http://" + $('#service_addr').val() + "/terminal/" + String(id), true);
+    request.send();
   };
-
-  request.open("GET", "http://" + $('#service_addr').val() + "/terminal/" + String(id), true);
-  request.send();
 };
